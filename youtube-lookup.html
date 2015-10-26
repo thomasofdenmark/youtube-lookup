@@ -1,0 +1,177 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+<link rel="import" href="../iron-icon/iron-icon.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../iron-icons/av-icons.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../paper-input/paper-input.html">
+
+<!--
+An element providing a solution to no problem in particular.
+
+Example:
+
+    <youtube-lookup></youtube-lookup>
+
+@group Youtube lookup
+@element youtube-lookup
+@demo demo/index.html
+-->
+<dom-module id="youtube-lookup">
+
+  <template>
+    <style>
+      :host {
+        display: block;
+        box-sizing: border-box;
+        background: #ccc;
+        padding: 10px;
+      }
+      :host {
+        --paper-input-container: {
+          padding: 10px;
+          background: #fff;
+        }
+      }
+      :host {
+        --paper-input-container-underline: {
+          background: #fff;
+        }
+      }
+      :host {
+        --paper-input-container-underline-focus: {
+          background: #fff;
+        }
+      }
+      :host {
+        --paper-input-container-input: {
+          padding-left: 10px;
+        }
+      }
+      .search-results {
+        position: absolute;
+        left: 0;
+        right: 0;
+        z-index: 910;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 2px 1px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2) 0 1px 5px 0 inset;
+      }
+      .track-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        padding-bottom: 0;
+      }
+
+      .track-actions {
+        flex: 0 0 30px;
+      }
+    </style>
+
+    <paper-input id="search-query" no-label-float placeholder="Add track..." value="{{_q}}">
+      <template is="dom-if" if="[[!_loading]]">
+        <iron-icon prefix icon="search" alt="" title=""></iron-icon>
+      </template>
+      <template is="dom-if" if="[[_loading]]">
+        <iron-icon prefix icon="av:loop" alt="" title=""></iron-icon>
+      </template>
+      <template is="dom-if" if="[[_q]]">
+        <iron-icon suffix on-tap="_clearInput" icon="close" alt="close" title="close" tabindex="0"></iron-icon>
+      </template>
+    </paper-input>
+    <div class="search-results">
+      <template is="dom-repeat" items="[[_ytresults]]">
+        <div class="track-container">
+            <span>[[item.snippet.title]]</span>
+            <div class="flex"></div>
+            <span class="track-actions">
+              <paper-icon-button on-tap="_handleSelectTrack" icon="add" alt="add" title="add"></paper-icon-button>
+            </span>
+        </div>
+      </template>
+    </div>
+    <iron-ajax auto id="ironAjax"
+               url="https://www.googleapis.com/youtube/v3/search"
+               params='{{_youtubeApiParams}}'
+               handleAs="json"
+               on-response="_handleYouTubeApiResponse"
+               on-error="_handleYouTubeApiError"
+               debounce-duration="300"
+               loading="{{_loading}}">
+    </iron-ajax>
+  </template>
+</dom-module>
+
+<script>
+
+  Polymer({
+
+    is: 'youtube-lookup',
+
+    properties: {
+      /**
+      * Your Youtube API key
+      */
+      apiKey: {
+        type: String,
+        value: ''
+      },
+
+      _youtubeApiParams: {
+        type: String, 
+        value: ''
+      },
+      _q: {type: String, value: '', observer: '_updateYouTubeApiParams'},
+      _apiError: {type: String, value: ''},
+    },
+
+    // Element Behavior
+
+    /**
+     * Fired when a result from the query is selected
+     *
+     * @event youtube-lookup-track-selected
+     */
+
+    _updateYouTubeApiParams: function() {
+      if(this._q !== '') {
+        this._youtubeApiParams = {'part':'snippet', 'q':this._q, 'key': this.apiKey, 'type': 'video'};
+      } else {
+        this._ytresults = '';
+      }
+    },
+    _handleYouTubeApiResponse: function(e) {
+      this._apiError = '';
+      var response = e.detail.response || '';
+      if(response){
+        this._ytresults = response.items;
+      }
+    },
+    _handleYouTubeApiError: function(e) {
+      if (e.detail.response && e.detail.response.indexOf('keyInvalid') >= 0) {
+        this._apiError = 'Missing or invalid API key. Please see the <google-youtube-video-wall> ' +
+          'documentation for information on setting the "apiKey" property to a valid value.';
+      } else {
+        this._apiError = e.detail.response;
+      }
+    },
+    _handleSelectTrack: function(e) {
+      this.fire('youtube-lookup-track-selected', e.model.item.snippet);
+      this._q = '';
+    },
+    _clearInput: function() {
+      document.getElementById('search-query').value = '';
+    },
+  });
+
+</script>
