@@ -33,8 +33,6 @@ Example:
       :host {
         display: block;
         box-sizing: border-box;
-        background: #ccc;
-        padding: 10px;
       }
       :host {
         --paper-input-container: {
@@ -166,7 +164,7 @@ Example:
       }
     },
     _handleSelectTrack: function(e) {
-      this.fire('youtube-lookup-track-selected', e.model.item.snippet);
+      this.fire('youtube-lookup-track-selected', e.model.item);
       this._q = '';
     },
     _clearInput: function() {
