@@ -90,6 +90,7 @@ Example:
         <iron-icon suffix on-tap="_clearInput" icon="close" alt="close" title="close" tabindex="0"></iron-icon>
       </template>
     </paper-input>
+
     <div class="search-results">
       <template is="dom-repeat" items="[[_ytresults]]">
         <div class="track-container">
@@ -101,10 +102,11 @@ Example:
         </div>
       </template>
     </div>
+
     <iron-ajax auto id="ironAjax"
                url="https://www.googleapis.com/youtube/v3/search"
                params='{{_youtubeApiParams}}'
-               handleAs="json"
+               handle-as="json"
                on-response="_handleYouTubeApiResponse"
                on-error="_handleYouTubeApiError"
                debounce-duration="300"
